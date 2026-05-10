@@ -912,7 +912,7 @@ async function launchBrowserInstance() {
         humanize: true,
         enable_cache: true,
         proxy: launchProxy,
-        geoip: !!launchProxy,
+        geoip: true,
         virtual_display: vdDisplay,
       });
       options.proxy = normalizePlaywrightProxy(options.proxy);
@@ -1090,13 +1090,10 @@ async function getSession(userId, { trace = false } = {}) {
         viewport: { width: 1280, height: 720 },
         permissions: ['geolocation'],
       };
-      // When geoip is active (proxy configured), camoufox auto-configures
-      // locale/timezone/geolocation from the proxy IP. Without proxy, use defaults.
-      if (!CONFIG.proxy.host) {
-        contextOptions.locale = 'en-US';
-        contextOptions.timezoneId = 'America/Los_Angeles';
-        contextOptions.geolocation = { latitude: 37.7749, longitude: -122.4194 };
-      }
+      // geoip is always on at launch (server.js:915) — camoufox-js derives
+      // locale/timezone/geolocation from the outgoing IP (proxy if set, else
+      // the host's public IP). Don't override here, or Playwright's context
+      // would clobber the browser-level values.
       let sessionProxy = null;
       if (proxyPool?.canRotateSessions) {
         sessionProxy = proxyPool.getNext(`ctx-${key}-${crypto.randomUUID().replace(/-/g, '').slice(0, 8)}`);
