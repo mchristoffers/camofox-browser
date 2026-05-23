@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   sync:
@@ -21,5 +22,31 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote add upstream https://github.com/jo-inc/camofox-browser.git
           git fetch upstream
-          git merge upstream/master --no-edit || echo "Merge conflict - manual resolution needed"
+          if ! git merge upstream/master --no-edit; then
+            git merge --abort
+            echo "CONFLICT=true" >> $GITHUB_ENV
+          fi
+      - name: Push changes
+        if: env.CONFLICT != 'true'
+        run: git push
+      - name: Open issue on conflict
+        if: env.CONFLICT == 'true'
+        run: |
+          existing=$(gh issue list --label "sync-conflict" --state open --json number --jq 'length')
+          if [ "$existing" = "0" ]; then
+            gh issue create \
+              --title "Fork sync conflict with upstream" \
+              --label "sync-conflict" \
+              --body "Automatic sync from `jo-inc/camofox-browser` failed due to a merge conflict on \`master\`.
+
+          **To resolve:**
+          \`\`\`bash
+          git remote add upstream https://github.com/jo-inc/camofox-browser.git
+          git fetch upstream
+          git merge upstream/master
+          # fix conflicts
           git push
+          \`\`\`"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
