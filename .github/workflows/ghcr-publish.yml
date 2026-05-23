@@ -21,3 +21,4 @@ jobs:
     uses: mchristoffers/workflows/.github/workflows/publish-ghcr.yml@main
     with:
       dockerfile: Dockerfile.ci
+      runner: self-hosted
