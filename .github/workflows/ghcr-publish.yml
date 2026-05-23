@@ -1,0 +1,23 @@
+name: Publish to ghcr.io (fork)
+
+# Fork-spezifischer Caller, der den reusable workflow aus
+# mchristoffers/workflows nutzt. Baut bei jedem Push auf master und pusht
+# nach ghcr.io/mchristoffers/camofox-browser:{latest,sha-<short>}.
+#
+# Der upstream-Workflow .github/workflows/docker.yml bleibt unverändert —
+# er triggert nur auf Releases und pusht in den jo-inc-Namespace.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    uses: mchristoffers/workflows/.github/workflows/publish-ghcr.yml@main
+    with:
+      dockerfile: Dockerfile.ci
